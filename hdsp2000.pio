@@ -1,0 +1,50 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; IRQ and PIO based controller for the HDSP2000 display
+
+.program hdsp2000
+.side_set 1
+
+.wrap_target
+    set x, 27 [8] side 0  ; want 28 iterations
+    pull   side 0; stall until there's data
+    irq clear 0 side 0;
+bitloop:
+    out pins, 1        side 1; clock edge as we put out data
+    jmp x-- bitloop   side 0; decrement loop
+    irq 0             side 0
+    out null, 4        side 0    ; shift out remainder of the OSR
+.wrap
+
+
+% c-sdk {
+// this is a raw helper function for use by the user which sets up the GPIO output, and configures the SM to output on a particular pin
+
+void hdsp2000_program_init(PIO pio, uint sm, uint offset, uint clk_pin, uint data_pin) {
+    pio_gpio_init(pio, clk_pin);
+    pio_gpio_init(pio, data_pin);
+
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clk_pin, 1, true);
+
+    pio_sm_config c = hdsp2000_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, clk_pin);
+    sm_config_set_out_pins(&c, data_pin, 1);
+
+    //sm_config_set_out_shift(&c, false, false, 28);
+   
+   sm_config_set_clkdiv(&c, 125);  // target 1MHz clock
+
+    pio_sm_init(pio, sm, offset, &c);
+    // pio_sm_exec(pio, sm, pio_encode_set(pio_x, 27));
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static inline void put_column_data(PIO pio, uint sm, uint32_t c_data) {
+    pio_sm_put_blocking(pio, sm, (uint32_t) c_data);
+}
+%}
