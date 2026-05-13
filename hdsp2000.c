@@ -21,16 +21,12 @@ void core1_entry() {
     printf("Loaded program at %d\n", offset);
     hdsp2000_program_init(pio, 0, offset, 14, 15);
 
-    for (int i = 0; i < 5; i++) {
-        column_data[i] = get_rand_32();
-    }
-
     while (true) {
         for (int i = 0; i < 5; i++) {
             put_column_data(pio, 0, column_data[i]);
             while(!(pio0_hw->intr)) {};
             gpio_put(i, true);
-            sleep_ms(5);
+            sleep_us(500);
             gpio_put(i, false);
             irq_clear(PIO0_IRQ_0);
         }
@@ -125,12 +121,11 @@ int main() {
     gpio_put_all(false);
     multicore_launch_core1(core1_entry);
 
-    sleep_ms(500);
     write_test_pattern();
     xy_to_col_data();
     push_to_display();
 
-    sleep_ms(500);
+    sleep_ms(1000);
     randomise_xy_data();
     xy_to_col_data();
     push_to_display();
