@@ -9,7 +9,6 @@
 #include "pico/multicore.h"
 #include "pico/rand.h"
 
-volatile uint col_index;
 volatile uint32_t column_data[5];
 volatile uint32_t new_data[5];
 volatile uint32_t xy_data[7];
@@ -26,7 +25,7 @@ void core1_entry() {
             put_column_data(pio, 0, column_data[i]);
             while(!(pio0_hw->intr)) {};
             gpio_put(i, true);
-            sleep_us(500);
+            sleep_us(2500);
             gpio_put(i, false);
             irq_clear(PIO0_IRQ_0);
         }
@@ -113,7 +112,6 @@ void push_to_display() {
 
 int main() {
     stdio_init_all();
-    col_index=0;
 
     gpio_init_mask(0b11111u);
     gpio_set_dir_out_masked(0b11111u);
