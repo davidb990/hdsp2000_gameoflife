@@ -25,3 +25,5 @@ The pins on the Pico W are used as follows:
 | 15       | Data     |
 
 The columns on the HDSP2000 use a fair bit of current (~400 mA), so a UDN2981 is used between the Pico W and the display to prevent the current of the display columns overwhelming the GPIO pins of the Pico W.
+
+Note that this repo really is quite experimental (and a bit messy!), but makes a useful starting point for using the HDSP2000 displays with Raspberry Pi microcontrollers.
